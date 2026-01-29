@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLA-XPU Benchmark Leaderboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#000000',
+                        surface: '#0a0a0a',
+                        border: '#333333',
+                        text: '#ededed',
+                        muted: '#888888',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #000000; color: #ededed; font-family: 'Inter', sans-serif; }
+        
+        /* 中性风格的 Tab 容器 */
+        .tab-container {
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            padding: 4px;
+            border-radius: 12px;
+            display: inline-flex;
+            gap: 4px;
+        }
+        
+        .tab-active {
+            background-color: #ffffff;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        .tab-inactive {
+            color: #888;
+            background-color: transparent;
+        }
+        .tab-inactive:hover {
+            color: #ffffff;
+        }
+
+        .table-row-hover:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 搜索框样式 */
+        .search-input {
+            background-color: transparent;
+            border: 1px solid #333;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: #666;
+            outline: none;
+        }
+
+        /* 排序图标 */
+        .sort-icon {
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 6px;
+            vertical-align: middle;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            opacity: 0.2;
+            transition: opacity 0.2s;
+        }
+        .sort-asc .sort-icon {
+            border-bottom: 4px solid #fff;
+            opacity: 1;
+        }
+        .sort-desc .sort-icon {
+            border-top: 4px solid #fff;
+            opacity: 1;
+        }
+        th {
+            user-select: none;
+            cursor: pointer;
+        }
+        th:hover {
+            color: #fff;
+        }
+
+        /* 列显示/隐藏控制 */
+        .col-hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pt-20 px-4">
+
+    <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold tracking-tight mb-4 text-white">VLA Benchmark</h1>
+        <p class="text-muted text-lg">Performance analysis of Vision-Language-Action models on heterogeneous hardware</p>
+    </div>
+
+    <div class="mb-10 flex justify-center w-full">
+        <div class="tab-container">
+            <button onclick="setColumnType('latency')" id="col-latency" class="px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-active">
+                Latency Priority
+            </button>
+            <button onclick="setColumnType('energy')" id="col-energy" class="px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-inactive">
+                Energy Metrics
+            </button>
+        </div>
+    </div>
+
+    <div class="mb-10 flex justify-center w-full" id="modelTabsContainer">
+        <div class="tab-container" id="modelTabs">
+            <!-- Model tabs will be dynamically generated -->
+        </div>
+    </div>
+
+    <!-- 统一的数据展示区域容器 -->
+    <div class="w-full max-w-7xl">
+        <!-- 搜索栏和排序说明 (仅在非硬件视图显示) -->
+        <div id="tableControls" class="flex justify-between items-center mb-4">
+            <div class="relative w-80">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" id="searchInput" placeholder="Search hardware..." 
+                       class="search-input w-full rounded-lg py-2 pl-10 pr-4 text-sm text-text placeholder-gray-600"
+                       onkeyup="applyFilter()">
+            </div>
+            
+            <div class="text-xs text-muted flex items-center gap-2">
+                <span>Sortable Columns</span>
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </div>
+        </div>
+
+        <!-- 硬件概览表 (初始隐藏) -->
+        <div id="hardwareOverviewContainer" class="border border-border rounded-xl overflow-hidden bg-[#050505] hidden">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-muted uppercase bg-[#0a0a0a] border-b border-border">
+                    <tr>
+                        <th class="px-6 py-4 font-medium">Hardware</th>
+                        <th class="px-6 py-4 font-medium text-right">Memory (GB)</th>
+                        <th class="px-6 py-4 font-medium text-right">Cost ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="hardwareOverviewBody" class="divide-y divide-border">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 模型数据主表 -->
+        <div id="mainTableContainer" class="border border-border rounded-xl overflow-hidden bg-[#050505]">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-muted uppercase bg-[#0a0a0a] border-b border-border">
+                    <tr>
+                        <th class="px-6 py-4 font-medium transition-colors" onclick="handleSort('hardware')">
+                            Hardware <span id="sort-hardware" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-capability" data-column="capability" onclick="handleSort('capability')">
+                            Capability <span id="sort-capability" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-memory" data-column="memory" onclick="handleSort('memory')">
+                            Memory (GB) <span id="sort-memory" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-cost" data-column="cost" onclick="handleSort('cost')">
+                            Cost ($) <span id="sort-cost" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-latency" data-column="latency" onclick="handleSort('latency')">
+                            Latency (ms) <span id="sort-latency" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-energy" data-column="energy" onclick="handleSort('energy')">
+                            Energy (J) <span id="sort-energy" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-ce" data-column="ce" onclick="handleSort('ce')">
+                            CE (10⁶) <span id="sort-ce" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-ct" data-column="ct" onclick="handleSort('ct')">
+                            CT (10²) <span id="sort-ct" class="sort-icon"></span>
+                        </th>
+                        <th class="px-6 py-4 font-medium text-right transition-colors col-cet" data-column="cet" onclick="handleSort('cet')">
+                            CET (10⁵) <span id="sort-cet" class="sort-icon"></span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-border">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl w-full mt-4 flex justify-between text-xs text-gray-600 px-1">
+        <div>
+            <span class="mr-4">* CE = Cost × Latency (Scaled 10⁶)</span>
+            <span class="mr-4">* CT = Cost × Time (Scaled 10²)</span>
+            <span>* CET = Cost × Energy × Time (Scaled 10⁵)</span>
+        </div>
+        <span>Anonymous Submission</span>
+    </div>
+
+    <script>
+        // 1. 基础数据 (不再包含硬编码的 CEP/CEDP/CT/CET，全部由 JS 计算)
+        const rawData = [
+            // SmolVLA
+            { model: "SmolVLA", hardware: "RTX 4090", cost: 3500, latency: 90.44, energy: 2152 },
+            { model: "SmolVLA", hardware: "Jetson Thor", cost: 3400, latency: 200.00, energy: 569 },
+            { model: "SmolVLA", hardware: "AGX Orin", cost: 1999, latency: 777.38, energy: 355 },
+            { model: "SmolVLA", hardware: "B60 Pro", cost: 599, latency: 262.607, energy: 5173 },
+            { model: "SmolVLA", hardware: "Ascend 310P", cost: 1030, latency: 488.34, energy: 2048 },
+
+            // Gr00t
+            { model: "Gr00t", hardware: "RTX 4090", cost: 3500, latency: 38.54, energy: 1938 },
+            { model: "Gr00t", hardware: "Jetson Thor", cost: 3400, latency: 107.65, energy: 551 },
+            { model: "Gr00t", hardware: "AGX Orin", cost: 1999, latency: 256.22, energy: 662 },
+            { model: "Gr00t", hardware: "B60 Pro", cost: 599, latency: 106.40, energy: 2983 },
+            { model: "Gr00t", hardware: "Ascend 310P", cost: 1030, latency: 221.65, energy: 436 },
+
+            // Pi0
+            { model: "Pi0", hardware: "RTX 4090", cost: 3500, latency: 102.30, energy: 2398 },
+            { model: "Pi0", hardware: "Jetson Thor", cost: 3400, latency: 246.00, energy: 1282 },
+            { model: "Pi0", hardware: "AGX Orin", cost: 1999, latency: 920.58, energy: 1866 },
+            { model: "Pi0", hardware: "B60 Pro", cost: 599, latency: 306.459, energy: 6363 },
+            { model: "Pi0", hardware: "Ascend 310P", cost: 1030, latency: 818.00, energy: 2618 },
+
+            // Openvla
+            { model: "Openvla", hardware: "RTX 4090", cost: 3500, latency: 185.00, energy: 2398 },
+            { model: "Openvla", hardware: "Jetson Thor", cost: 3400, latency: 746.00, energy: 1282 },
+            { model: "Openvla", hardware: "AGX Orin", cost: 1999, latency: 951.56, energy: 1866 },
+            { model: "Openvla", hardware: "B60 Pro", cost: 599, latency: 467.101, energy: 6363 },
+            { model: "Openvla", hardware: "Ascend 310P", cost: 1030, latency: 2280.00, energy: 2618 },
+
+            // Pi0.5
+            { model: "Pi0.5", hardware: "RTX 4090", cost: 3500, latency: 220.74, energy: 2398 },
+            { model: "Pi0.5", hardware: "Jetson Thor", cost: 3400, latency: 425.00, energy: 1282 },
+            { model: "Pi0.5", hardware: "AGX Orin", cost: 1999, latency: 2994.02, energy: 1866 },
+            { model: "Pi0.5", hardware: "B60 Pro", cost: 599, latency: 691.09, energy: 6363 },
+            { model: "Pi0.5", hardware: "Ascend 310P", cost: 1030, latency: 845.20, energy: 2618 },
+
+            // act
+            { model: "ACT", hardware: "RTX 4090", cost: 3500, latency: 3.14, energy: 2152 },
+            { model: "ACT", hardware: "Jetson Thor", cost: 3400, latency: 6.00, energy: 569 },
+            { model: "ACT", hardware: "AGX Orin", cost: 1999, latency: 23.93, energy: 355 },
+            { model: "ACT", hardware: "B60 Pro", cost: 599, latency: 57.356, energy: 5173 },
+            { model: "ACT", hardware: "Ascend 310P", cost: 1030, latency: 14.26, energy: 2048 },
+            { model: "ACT", hardware: "CPU", cost: 220, latency: 73.05 },
+            { model: "ACT", hardware: "Ascend 310B", cost: 370, latency: 93.6 },
+
+            // Diffusion Policy
+            { model: "Diffusion Policy", hardware: "RTX 4090", cost: 3500, latency: 378.27, energy: 2152 },
+            { model: "Diffusion Policy", hardware: "Jetson Thor", cost: 3400, latency: 2557.00, energy: 569 },
+            { model: "Diffusion Policy", hardware: "AGX Orin", cost: 1999, latency: 4379.08, energy: 355 },
+            { model: "Diffusion Policy", hardware: "B60 Pro", cost: 599, latency: 925.35, energy: 5173 },
+            { model: "Diffusion Policy", hardware: "Ascend 310P", cost: 1030, latency: 1853.00, energy: 2048 },
+            { model: "Diffusion Policy", hardware: "CPU", cost: 220, latency: 6628.18 },
+            { model: "Diffusion Policy", hardware: "Ascend 310B", cost: 370, latency: 26611 }
+        ];
+
+        // 2. 动态计算逻辑
+        const memoryMap = {
+            'RTX 4090': '24',
+            'Jetson Thor': '128',
+            'AGX Orin': '64',
+            'B60 Pro': '24',
+            'Ascend 310P': '48',
+            'CPU': '32',
+            'Ascend 310B': '12'
+        };
+
+        const capabilityMap = {
+            'ACT': 22.8975,
+            'Diffusion Policy': 72.4,
+            'SmolVLA': 87.3,
+            'Pi0': 91.5,
+            'Openvla': 76.5,
+            'Gr00t': 87,
+            'Pi0.5': 97.5
+        };
+
+        const allData = rawData.map(d => {
+            const timeSeconds = d.latency / 1000;
+            
+            // CT = Cost * Time
+            const ctVal = d.cost * timeSeconds;
+            const ctDisplay = ctVal / 100;
+            
+            // CET (Cost-Energy-Time) = Cost * Energy * Time
+            const cetRaw = d.cost * (d.energy || 0) * timeSeconds;
+            const cetDisplay = cetRaw / 100000; 
+
+            // CE (Cost-Latency) = Cost * Latency
+            const ceRaw = d.cost * d.latency;
+            const ceDisplay = ceRaw / 1000000;
+
+            return {
+                ...d,
+                capability: capabilityMap[d.model] || 0,
+                memory: memoryMap[d.hardware] || '-',
+                ct: ctDisplay,
+                cet: cetDisplay,
+                ce: ceDisplay
+            };
+        });
+
+        // 3. 硬件颜色映射
+        const hardwareColors = {
+            'RTX 4090': { dot: '#10b981', text: '#34d399' },      // 绿色
+            'Jetson Thor': { dot: '#3b82f6', text: '#60a5fa' },   // 蓝色
+            'AGX Orin': { dot: '#a855f7', text: '#c084fc' },      // 紫色
+            'B60 Pro': { dot: '#06b6d4', text: '#22d3ee' },       // 青色
+            'Ascend 310P': { dot: '#f59e0b', text: '#fbbf24' },    // 橙色
+            'CPU': { dot: '#94a3b8', text: '#cbd5e1' },           // 灰色
+            'Ascend 310B': { dot: '#ec4899', text: '#f472b6' }     // 粉色
+        };
+
+        // 4. 状态管理
+        let currentModel = 'SmolVLA';
+        let currentColumnType = 'latency'; // 'latency' 或 'energy'
+        let sortConfig = { key: 'cet', direction: 'asc' }; // 默认按 CET 升序
+
+        // 列类型定义
+        const columnTypes = {
+            latency: ['capability', 'memory', 'cost', 'latency', 'ct'],  // 带延迟的列
+            energy: ['capability', 'memory', 'cost', 'latency', 'energy', 'ce', 'cet']    // 带功耗的列
+        };
+
+        // 模型列表定义
+        const allModels = ['SmolVLA', 'Gr00t', 'Pi0', 'Openvla', 'Pi0.5', 'ACT', 'Diffusion Policy'];
+        const energyModels = ['SmolVLA', 'Gr00t', 'Pi0']; // 只有这些模型有energy数据
+
+        // 5. 渲染函数
+        function renderHardwareOverview() {
+            const container = document.getElementById('hardwareOverviewContainer');
+            const mainTable = document.getElementById('mainTableContainer');
+            const controls = document.getElementById('tableControls');
+            const tbody = document.getElementById('hardwareOverviewBody');
+            
+            if (currentModel !== 'Hardware') {
+                container.classList.add('hidden');
+                mainTable.classList.remove('hidden');
+                controls.classList.remove('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            mainTable.classList.add('hidden');
+            controls.classList.add('hidden');
+            tbody.innerHTML = '';
+            
+            // 获取唯一的硬件列表
+            const seen = new Set();
+            const uniqueHardware = [];
+            allData.forEach(d => {
+                if (!seen.has(d.hardware)) {
+                    seen.add(d.hardware);
+                    uniqueHardware.push({
+                        hardware: d.hardware,
+                        cost: d.cost,
+                        memory: d.memory
+                    });
+                }
+            });
+
+            // 按价格从高到低排序
+            uniqueHardware.sort((a, b) => b.cost - a.cost);
+
+            uniqueHardware.forEach(row => {
+                const colors = hardwareColors[row.hardware] || { dot: '#666666', text: '#ffffff' };
+                const tr = document.createElement('tr');
+                tr.className = 'table-row-hover transition-colors duration-150 text-gray-300';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-3 font-mono text-xs flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full inline-block" style="background-color: ${colors.dot}; opacity: 0.8;"></span>
+                        <span style="color: ${colors.text}; font-weight: 500;">${row.hardware}</span>
+                    </td>
+                    <td class="px-6 py-3 text-right font-mono text-white text-xs">${row.memory}</td>
+                    <td class="px-6 py-3 text-right font-mono text-white text-xs">$${row.cost.toLocaleString()}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-muted">No matching hardware found.</td></tr>';
+                return;
+            }
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'table-row-hover border-b border-border last:border-0 transition-colors duration-150 text-gray-300';
+                
+                // 格式化数字
+                const fmt = (n) => n.toLocaleString();
+                const fmtDec = (n) => n.toFixed(2);
+
+                // 获取硬件对应的颜色
+                const colors = hardwareColors[row.hardware] || { dot: '#666666', text: '#ffffff' };
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-sm flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full inline-block" style="background-color: ${colors.dot}; opacity: 0.9;"></span>
+                        <span style="color: ${colors.text};">${row.hardware}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-capability" data-column="capability">${row.capability}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-memory" data-column="memory">${row.memory}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-cost" data-column="cost">${row.cost > 0 ? '$' + fmt(row.cost) : 'N/A'}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-latency" data-column="latency">${fmtDec(row.latency)}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-energy" data-column="energy">${row.energy ? fmt(row.energy) : '-'}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-ce" data-column="ce">${row.cost > 0 ? fmtDec(row.ce) : '-'}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-ct" data-column="ct">${row.cost > 0 ? fmtDec(row.ct) : '-'}</td>
+                    <td class="px-6 py-4 text-right font-mono text-white col-cet" data-column="cet">${row.energy ? fmtDec(row.cet) : '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            updateSortIcons();
+            updateColumnVisibility();
+        }
+
+        function renderModelTabs() {
+            const container = document.getElementById('modelTabs');
+            const baseModels = currentColumnType === 'energy' ? energyModels : allModels;
+            
+            // 在模型前加上 Hardware 选项
+            const tabsToShow = ['Hardware', ...baseModels];
+            
+            container.innerHTML = '';
+            
+            tabsToShow.forEach((model, index) => {
+                const btn = document.createElement('button');
+                btn.id = `tab-${model}`;
+                btn.className = model === currentModel ? 
+                    "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-active" : 
+                    "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-inactive";
+                btn.textContent = model === 'Hardware' ? 'Hardware' : model;
+                btn.onclick = () => setFilter(model);
+                container.appendChild(btn);
+            });
+            
+            if (!tabsToShow.includes(currentModel)) {
+                currentModel = tabsToShow[0];
+                applyFilter();
+            }
+        }
+
+        function setColumnType(type) {
+            currentColumnType = type;
+            ['latency', 'energy'].forEach(t => {
+                const btn = document.getElementById(`col-${t}`);
+                btn.className = t === type ? 
+                    "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-active" : 
+                    "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-inactive";
+            });
+            
+            // 如果当前排序的列不在可见列中，切换到对应的默认排序列
+            const visibleColumns = columnTypes[type];
+            if (!visibleColumns.includes(sortConfig.key)) {
+                // latency类型默认按CT排序，energy类型默认按CET排序
+                sortConfig.key = type === 'latency' ? 'ct' : 'cet';
+                sortConfig.direction = 'asc';
+            }
+            
+            // 更新硬件概览表
+            renderHardwareOverview();
+            
+            // 更新模型标签页
+            renderModelTabs();
+            updateColumnVisibility();
+            applyFilter(); // 重新渲染表格
+        }
+
+        function updateColumnVisibility() {
+            const visibleColumns = columnTypes[currentColumnType];
+            
+            // 更新表头
+            document.querySelectorAll('th[data-column]').forEach(th => {
+                const col = th.getAttribute('data-column');
+                if (visibleColumns.includes(col)) {
+                    th.classList.remove('col-hidden');
+                } else {
+                    th.classList.add('col-hidden');
+                }
+            });
+            
+            // 更新表格单元格
+            document.querySelectorAll('td[data-column]').forEach(td => {
+                const col = td.getAttribute('data-column');
+                if (visibleColumns.includes(col)) {
+                    td.classList.remove('col-hidden');
+                } else {
+                    td.classList.add('col-hidden');
+                }
+            });
+        }
+
+        function setFilter(model) {
+            currentModel = model;
+            
+            // 更新 Tab 样式
+            const baseModels = currentColumnType === 'energy' ? energyModels : allModels;
+            const allPossibleTabs = ['Hardware', ...baseModels];
+            
+            allPossibleTabs.forEach(m => {
+                const btn = document.getElementById(`tab-${m}`);
+                if (btn) {
+                    btn.className = m === model ? 
+                        "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-active shadow-sm" : 
+                        "px-6 py-2.5 rounded-lg text-sm transition-all duration-200 tab-inactive";
+                }
+            });
+
+            if (model === 'Hardware') {
+                renderHardwareOverview();
+            } else {
+                renderHardwareOverview(); // 这会处理隐藏逻辑
+                applyFilter();
+            }
+        }
+
+        function handleSort(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc'; // 数值越小越好，默认升序
+            }
+            applyFilter();
+        }
+
+        function updateSortIcons() {
+            document.querySelectorAll('.sort-icon').forEach(el => {
+                el.parentElement.className = el.parentElement.className.replace(' sort-asc', '').replace(' sort-desc', '');
+            });
+            const activeHeader = document.querySelector(`th[onclick="handleSort('${sortConfig.key}')"]`);
+            if (activeHeader) {
+                activeHeader.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        }
+
+        function applyFilter() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            // 筛选
+            let filtered = allData.filter(d => d.model === currentModel);
+            
+            // 如果是能效视图，只显示有 energy 数据的硬件
+            if (currentColumnType === 'energy') {
+                filtered = filtered.filter(d => d.energy !== undefined);
+            }
+
+            if (query) {
+                filtered = filtered.filter(d => d.hardware.toLowerCase().includes(query));
+            }
+            
+            // 排序
+            filtered.sort((a, b) => {
+                let valA = a[sortConfig.key];
+                let valB = b[sortConfig.key];
+                
+                if (typeof valA === 'string') {
+                    return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+                return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+            });
+
+            renderTable(filtered);
+        }
+
+        // 初始化
+        setColumnType('latency');
+        setFilter('SmolVLA');
+    </script>
+</body>
+</html>
