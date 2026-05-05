@@ -126,6 +126,14 @@
         </div>
     </div>
 
+    <div id="ckptSourceContainer" class="w-full max-w-7xl mb-6 hidden">
+        <div class="border border-border rounded-lg bg-[#050505] px-4 py-3 text-sm text-muted">
+            <span class="text-gray-400">CKPT Source:</span>
+            <a id="ckptSourceLink" href="#" target="_blank" rel="noopener noreferrer"
+               class="ml-2 text-blue-400 hover:text-blue-300 hover:underline break-all"></a>
+        </div>
+    </div>
+
     <!-- 统一的数据展示区域容器 -->
     <div class="w-full max-w-7xl">
         <!-- 搜索栏和排序说明 (仅在非硬件视图显示) -->
@@ -202,13 +210,19 @@
         </div>
     </div>
     
-    <div class="max-w-7xl w-full mt-4 flex justify-between text-xs text-gray-600 px-1">
-        <div>
+    <div class="max-w-7xl w-full mt-6 text-xs text-muted px-1">
+        <div class="flex justify-start flex-wrap gap-y-2 mb-2">
             <span class="mr-4">* CE = Cost × Latency (Scaled 10⁶)</span>
             <span class="mr-4">* CT = Cost × Time (Scaled 10²)</span>
-            <span>* CET = Cost × Energy × Time (Scaled 10⁵)</span>
+            <span class="mr-4">* CET = Cost × Energy × Time (Scaled 10⁵)</span>
+            <span class="italic font-medium text-gray-400">* Lower numerical values across all metrics represent superior performance efficiency.</span>
         </div>
-        <span>Anonymous Submission</span>
+        <div class="mb-2 opacity-80">
+            * The generic "CPU" designation refers to the 11th Gen Intel Core i7-11700 processor.
+        </div>
+        <div class="text-right text-gray-500 mt-1">
+            Anonymous Submission
+        </div>
     </div>
 
     <script>
@@ -283,7 +297,7 @@
             'ACT': 22.8975,
             'Diffusion Policy': 72.4,
             'SmolVLA': 87.3,
-            'Pi0': 91.5,
+            'Pi0': 86,
             'Openvla': 76.5,
             'Gr00t': 87,
             'Pi0.5': 97.5
@@ -339,6 +353,15 @@
         // 模型列表定义
         const allModels = ['SmolVLA', 'Gr00t', 'Pi0', 'Openvla', 'Pi0.5', 'ACT', 'Diffusion Policy'];
         const energyModels = ['SmolVLA', 'Gr00t', 'Pi0']; // 只有这些模型有energy数据
+        const modelCkptSources = {
+            'ACT': 'https://huggingface.co/lerobot/act_aloha_sim_transfer_cube_human',
+            'Diffusion Policy': 'https://huggingface.co/lerobot/diffusion_pusht',
+            'Pi0': 'https://huggingface.co/lerobot/pi0_libero_finetuned_v044',
+            'Pi0.5': 'https://huggingface.co/lerobot/pi05_base',
+            'SmolVLA': 'https://huggingface.co/lerobot/smolvla_base',
+            'Openvla': 'https://huggingface.co/openvla/openvla-7b-finetuned-libero-spatial',
+            'Gr00t': 'https://huggingface.co/nvidia/GR00T-N1.5-3B'
+        };
 
         // 5. 渲染函数
         function renderHardwareOverview() {
@@ -532,6 +555,25 @@
                 renderHardwareOverview(); // 这会处理隐藏逻辑
                 applyFilter();
             }
+
+            updateCkptSource();
+        }
+
+        function updateCkptSource() {
+            const container = document.getElementById('ckptSourceContainer');
+            const link = document.getElementById('ckptSourceLink');
+
+            if (currentModel === 'Hardware' || !modelCkptSources[currentModel]) {
+                container.classList.add('hidden');
+                link.removeAttribute('href');
+                link.textContent = '';
+                return;
+            }
+
+            const sourceUrl = modelCkptSources[currentModel];
+            container.classList.remove('hidden');
+            link.href = sourceUrl;
+            link.textContent = sourceUrl;
         }
 
         function handleSort(key) {
