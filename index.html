@@ -280,6 +280,9 @@
       background: #fff;
       overflow: hidden;
     }
+    .figure.full-width {
+      grid-column: 1 / -1;
+    }
     .figure-media {
       min-height: 260px;
       display: grid;
@@ -532,18 +535,33 @@
       <div class="grid-3">
         <article class="card">
           <span class="tag">Finding 1</span>
-          <h3>Model size is not latency</h3>
-          <p>Smaller policies can be slower when iterative diffusion dominates the control loop. Feasibility must be measured end to end.</p>
+          <h3>Model size does not predict speed</h3>
+          <p>Fewer parameters do not always mean higher inference frequency, because iterative Action Expert denoising can dominate latency.</p>
         </article>
         <article class="card">
           <span class="tag">Finding 2</span>
-          <h3>Right-sized hardware wins</h3>
-          <p>After latency screening, cost and energy can favor edge accelerators over flagship desktop GPUs for specific robot settings.</p>
+          <h3>Hardware choice is metric-dependent</h3>
+          <p>Latency, cost, energy, CE, and CET rankings can select different platforms for the same VLA workload.</p>
         </article>
         <article class="card">
           <span class="tag">Finding 3</span>
-          <h3>Two phases, two bottlenecks</h3>
-          <p>The VLM backbone is compute-bound, while the Action Expert is memory-bound and serial, causing phase-dependent underutilization.</p>
+          <h3>VLA execution is imbalanced</h3>
+          <p>The workflow has a dual-phase imbalance: the VLM backbone uses hardware well, while the Action Expert often dominates latency.</p>
+        </article>
+        <article class="card">
+          <span class="tag">Finding 4</span>
+          <h3>Robotics inverts bottlenecks</h3>
+          <p>Unlike typical generation workloads, the VLM backbone is compute-bound while the Action Expert is memory-bound.</p>
+        </article>
+        <article class="card">
+          <span class="tag">Finding 5</span>
+          <h3>Optimizations must compose globally</h3>
+          <p>Phase-aware optimizations such as compilation, DP-Cache, and V-AEFusion need to be combined with an end-to-end view.</p>
+        </article>
+        <article class="card">
+          <span class="tag">Finding 6</span>
+          <h3>Optimization gains vary by hardware</h3>
+          <p>The same method can speed up one platform but offer limited benefit on another due to hardware design and resource contention.</p>
         </article>
       </div>
     </div>
@@ -564,9 +582,9 @@
         </figure>
         <figure class="figure">
           <div class="figure-media image tall">
-            <img class="media-img" src="images/franka.png" alt="Franka table-cleaning task initial and finish frames">
+            <img class="media-img" src="images/SM.jpg" alt="Latency breakdown and SM utilization trend">
           </div>
-          <figcaption class="figure-caption">Real-world Franka deployment for table-cleaning with initial and finish frames.</figcaption>
+          <figcaption class="figure-caption">Latency breakdown and SM utilization across VLA phases.</figcaption>
         </figure>
       </div>
     </div>
@@ -580,6 +598,11 @@
       </div>
       <div class="grid-3">
         <article class="card">
+          <span class="tag">Compilation</span>
+          <h3>Hardware-aware execution</h3>
+          <p>torch.compile and Ascend ATC reduce framework overhead and fuse operations, with platform-dependent gains.</p>
+        </article>
+        <article class="card">
           <span class="tag">DP-Cache</span>
           <h3>Skip redundant diffusion steps</h3>
           <p>Offline profiling identifies stable diffusion segments, then cached intermediate results bypass redundant computation during inference.</p>
@@ -588,11 +611,6 @@
           <span class="tag">V-AEFusion</span>
           <h3>Overlap VLM and Action Expert</h3>
           <p>Early denoising uses stale but temporally coherent visual features while the VLM processes the current observation.</p>
-        </article>
-        <article class="card">
-          <span class="tag">Compilation</span>
-          <h3>Hardware-aware execution</h3>
-          <p>torch.compile and Ascend ATC reduce framework overhead and fuse operations, with platform-dependent gains.</p>
         </article>
       </div>
       <div class="asset-grid" style="margin-top: 18px;">
@@ -625,37 +643,25 @@
         <p class="lead">Robot task visuals and execution traces for on-robot VLA deployment.</p>
       </div>
       <div class="figure-grid">
-        <figure class="figure">
-          <div class="figure-media image tall">
-            <img class="media-cover" src="videos/4_4picture.gif" alt="Animated robot task demonstration" loading="lazy">
-          </div>
-          <figcaption class="figure-caption">Animated task demonstration. This GIF is 16 MB, so it is lazy-loaded below the fold.</figcaption>
-        </figure>
-        <figure class="figure">
+        <figure class="figure full-width">
           <div class="figure-media image tall">
             <img class="media-img" src="images/energy.jpg" alt="Robot execution stages with time and energy consumption" loading="lazy">
           </div>
           <figcaption class="figure-caption">Execution-stage time and energy comparison across hardware platforms.</figcaption>
         </figure>
       </div>
-      <div class="asset-grid" style="margin-top: 18px;">
+      <div class="figure-grid" style="margin-top: 18px;">
         <figure class="figure">
-          <div class="figure-media image">
+          <div class="figure-media image tall">
             <img class="media-img" src="images/jaka.PNG" alt="JAKA dual-arm robot placement tasks" loading="lazy">
           </div>
           <figcaption class="figure-caption">JAKA dual-arm real-world placement tasks.</figcaption>
         </figure>
         <figure class="figure">
-          <div class="figure-media image">
-            <img class="media-img" src="images/SM.jpg" alt="Latency breakdown and SM utilization trend" loading="lazy">
+          <div class="figure-media image tall">
+            <img class="media-img" src="images/franka.png" alt="Franka table-cleaning task initial and finish frames" loading="lazy">
           </div>
-          <figcaption class="figure-caption">Latency breakdown and SM utilization across VLA phases.</figcaption>
-        </figure>
-        <figure class="figure">
-          <div class="figure-media image">
-            <img class="media-img" src="images/obssim.PNG" alt="Observation similarity between adjacent timesteps" loading="lazy">
-          </div>
-          <figcaption class="figure-caption">Temporal observation similarity motivates asynchronous VLM-AE execution.</figcaption>
+          <figcaption class="figure-caption">Real-world Franka deployment for table-cleaning with initial and finish frames.</figcaption>
         </figure>
       </div>
     </div>
