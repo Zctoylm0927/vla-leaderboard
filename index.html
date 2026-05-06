@@ -230,6 +230,20 @@
       color: #6b7882;
       padding: 24px;
     }
+    .media-img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      background: #fff;
+    }
+    .media-cover {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #fff;
+    }
     .visual-caption {
       display: flex;
       justify-content: space-between;
@@ -334,6 +348,16 @@
       color: #667581;
       text-align: center;
       font-weight: 700;
+    }
+    .figure-media.image {
+      padding: 0;
+      background: #fff;
+    }
+    .figure-media.tall { min-height: 360px; }
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
     }
     .figure-caption {
       padding: 14px 16px;
@@ -474,7 +498,7 @@
     @media (max-width: 940px) {
       .hero-inner { grid-template-columns: 1fr; min-height: auto; }
       .hero-visual { min-height: 420px; }
-      .metrics, .grid-3, .figure-grid { grid-template-columns: 1fr; }
+      .metrics, .grid-3, .figure-grid, .asset-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
     @media (max-width: 620px) {
@@ -539,9 +563,8 @@
               <span class="pipe-value">Robot Loop</span>
             </div>
           </div>
-          <div class="chart-placeholder">
-            Placeholder for the main overview image or teaser figure.
-            Replace this block with your robot / system / leaderboard image.
+          <div class="chart-placeholder" aria-label="VLA model capability and hardware performance chart">
+            <img class="media-img" src="images/vla_performance.png" alt="VLA model capability and hardware performance across accelerators">
           </div>
           <div class="visual-caption">
             <span>CET: Cost · Energy · Time</span>
@@ -609,16 +632,20 @@
     <div class="section-inner">
       <div class="section-head">
         <h2>Visual Summary</h2>
-        <p class="lead">These placeholders mark the image positions you can replace with paper figures, robot photos, deployment diagrams, or video thumbnails.</p>
+        <p class="lead">Representative figures and robot deployment visuals from the paper assets.</p>
       </div>
       <div class="figure-grid">
         <figure class="figure">
-          <div class="figure-media">Placeholder: model-hardware compatibility matrix</div>
-          <figcaption class="figure-caption">Suggested asset: Consumer-Producer matrix or CET ranking overview.</figcaption>
+          <div class="figure-media image tall">
+            <img class="media-img" src="images/cet.jpg" alt="Cost-Energy-Time analysis across VLA models and hardware platforms">
+          </div>
+          <figcaption class="figure-caption">Cost-Energy-Time analysis reveals different hardware choices under deployment priorities.</figcaption>
         </figure>
         <figure class="figure">
-          <div class="figure-media">Placeholder: real robot deployment photo or video frame</div>
-          <figcaption class="figure-caption">Suggested asset: Franka or JAKA manipulation task visual.</figcaption>
+          <div class="figure-media image tall">
+            <img class="media-img" src="images/franka.png" alt="Franka table-cleaning task initial and finish frames">
+          </div>
+          <figcaption class="figure-caption">Real-world Franka deployment for table-cleaning with initial and finish frames.</figcaption>
         </figure>
       </div>
     </div>
@@ -646,6 +673,69 @@
           <h3>Hardware-aware execution</h3>
           <p>torch.compile and Ascend ATC reduce framework overhead and fuse operations, with platform-dependent gains.</p>
         </article>
+      </div>
+      <div class="asset-grid" style="margin-top: 18px;">
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/dp-cache.jpg" alt="DP-Cache stable diffusion segment and cache reuse diagram" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">DP-Cache exploits stable diffusion segments to reduce redundant Action Expert computation.</figcaption>
+        </figure>
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/vaepipe.jpg" alt="V-AEFusion pipeline parallelism diagram" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">V-AEFusion overlaps stale and fresh visual features with diffusion steps.</figcaption>
+        </figure>
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/roofline.jpg" alt="Roofline analysis for VLM backbone and Action Expert bottlenecks" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">Roofline analysis separates compute-bound VLM and memory-bound Action Expert phases.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2>Deployment Demo</h2>
+        <p class="lead">Robot task visuals and execution traces for on-robot VLA deployment.</p>
+      </div>
+      <div class="figure-grid">
+        <figure class="figure">
+          <div class="figure-media image tall">
+            <img class="media-cover" src="videos/4_4picture.gif" alt="Animated robot task demonstration" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">Animated task demonstration. This GIF is 16 MB, so it is lazy-loaded below the fold.</figcaption>
+        </figure>
+        <figure class="figure">
+          <div class="figure-media image tall">
+            <img class="media-img" src="images/energy.jpg" alt="Robot execution stages with time and energy consumption" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">Execution-stage time and energy comparison across hardware platforms.</figcaption>
+        </figure>
+      </div>
+      <div class="asset-grid" style="margin-top: 18px;">
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/jaka.PNG" alt="JAKA dual-arm robot placement tasks" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">JAKA dual-arm real-world placement tasks.</figcaption>
+        </figure>
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/SM.jpg" alt="Latency breakdown and SM utilization trend" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">Latency breakdown and SM utilization across VLA phases.</figcaption>
+        </figure>
+        <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/obssim.PNG" alt="Observation similarity between adjacent timesteps" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">Temporal observation similarity motivates asynchronous VLM-AE execution.</figcaption>
+        </figure>
       </div>
     </div>
   </section>
