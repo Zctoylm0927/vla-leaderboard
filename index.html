@@ -89,11 +89,11 @@
     .hero-inner {
       max-width: 1180px;
       margin: 0 auto;
-      min-height: calc(100vh - 54px);
-      padding: 64px 24px 46px;
+      min-height: min(760px, calc(100vh - 54px));
+      padding: 72px 24px 56px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
-      gap: 42px;
+      grid-template-columns: minmax(420px, 1fr) minmax(380px, 500px);
+      gap: 44px;
       align-items: center;
     }
     .eyebrow {
@@ -117,7 +117,7 @@
     h1 {
       margin: 22px 0 16px;
       max-width: 920px;
-      font-size: clamp(34px, 5vw, 66px);
+      font-size: clamp(34px, 4.5vw, 64px);
       line-height: 1.04;
       letter-spacing: 0;
     }
@@ -160,75 +160,20 @@
     }
     .btn:hover { transform: translateY(-1px); }
     .hero-visual {
-      align-self: stretch;
-      min-height: 480px;
+      align-self: center;
       border: 1px solid rgba(36, 52, 62, 0.18);
-      border-radius: var(--radius);
-      background: #fbfcfd;
+      border-radius: 12px;
+      background: #fff;
       box-shadow: var(--shadow);
       overflow: hidden;
-      display: grid;
-      grid-template-rows: 44px 1fr;
+      padding: 18px;
     }
-    .window-bar {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 0 14px;
-      border-bottom: 1px solid var(--soft-line);
+    .hero-media-frame {
+      aspect-ratio: 4 / 3;
+      border: 1px solid var(--soft-line);
+      border-radius: 7px;
       background: #fff;
-    }
-    .window-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--line);
-    }
-    .visual-body {
-      padding: 22px;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 18px;
-    }
-    .pipeline {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
-    }
-    .pipe-node {
-      min-height: 92px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: var(--wash);
-      padding: 14px;
-    }
-    .pipe-label {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .pipe-value {
-      display: block;
-      margin-top: 9px;
-      font-size: 19px;
-      font-weight: 780;
-    }
-    .chart-placeholder {
-      border: 1px dashed #b8c5cf;
-      border-radius: 7px;
-      background:
-        linear-gradient(180deg, transparent 0, transparent 31px, rgba(23, 32, 38, 0.04) 32px),
-        linear-gradient(90deg, transparent 0, transparent 31px, rgba(23, 32, 38, 0.04) 32px),
-        #fff;
-      background-size: 32px 32px;
-      min-height: 230px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: #6b7882;
-      padding: 24px;
+      overflow: hidden;
     }
     .media-img {
       width: 100%;
@@ -244,12 +189,8 @@
       object-fit: cover;
       background: #fff;
     }
-    .visual-caption {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      color: var(--muted);
-      font-size: 13px;
+    .hero-media-frame .media-cover {
+      height: 100%;
     }
 
     section {
@@ -497,14 +438,14 @@
 
     @media (max-width: 940px) {
       .hero-inner { grid-template-columns: 1fr; min-height: auto; }
-      .hero-visual { min-height: 420px; }
+      .hero-visual { max-width: 640px; width: 100%; }
       .metrics, .grid-3, .figure-grid, .asset-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
     @media (max-width: 620px) {
       .nav-inner, .section-inner, .hero-inner { padding-left: 16px; padding-right: 16px; }
       .hero-inner { padding-top: 38px; }
-      .pipeline { grid-template-columns: 1fr; }
+      .hero-visual { padding: 10px; }
       .actions, .leaderboard-tools, .footer-inner { flex-direction: column; align-items: stretch; }
       .btn, .tab { width: 100%; }
       .citation { grid-template-columns: 1fr; }
@@ -542,34 +483,9 @@
           <a class="btn" href="#citation">BibTeX</a>
         </div>
       </div>
-      <div class="hero-visual" aria-label="Paper overview visual placeholder">
-        <div class="window-bar">
-          <span class="window-dot"></span>
-          <span class="window-dot"></span>
-          <span class="window-dot"></span>
-        </div>
-        <div class="visual-body">
-          <div class="pipeline">
-            <div class="pipe-node">
-              <span class="pipe-label">Observe</span>
-              <span class="pipe-value">VLM Backbone</span>
-            </div>
-            <div class="pipe-node">
-              <span class="pipe-label">Infer</span>
-              <span class="pipe-value">Action Expert</span>
-            </div>
-            <div class="pipe-node">
-              <span class="pipe-label">Act</span>
-              <span class="pipe-value">Robot Loop</span>
-            </div>
-          </div>
-          <div class="chart-placeholder" aria-label="VLA model capability and hardware performance chart">
-            <img class="media-img" src="images/vla_performance.png" alt="VLA model capability and hardware performance across accelerators">
-          </div>
-          <div class="visual-caption">
-            <span>CET: Cost · Energy · Time</span>
-            <span>GPU · XPU · NPU</span>
-          </div>
+      <div class="hero-visual" aria-label="Animated robot task demonstration">
+        <div class="hero-media-frame">
+          <img class="media-cover" src="videos/4_4picture.gif" alt="Animated robot task demonstration">
         </div>
       </div>
     </div>
