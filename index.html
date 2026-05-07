@@ -87,14 +87,17 @@
         var(--wash);
     }
     .hero-inner {
-      max-width: 1180px;
+      max-width: 1320px;
       margin: 0 auto;
       min-height: min(760px, calc(100vh - 54px));
       padding: 72px 24px 56px;
       display: grid;
-      grid-template-columns: minmax(420px, 1fr) minmax(380px, 500px);
-      gap: 44px;
+      grid-template-columns: minmax(360px, 0.85fr) minmax(500px, 620px);
+      gap: 64px;
       align-items: center;
+    }
+    .hero-copy {
+      padding-left: 32px;
     }
     .eyebrow {
       display: inline-flex;
@@ -196,6 +199,15 @@
     section {
       border-bottom: 1px solid var(--soft-line);
     }
+    #overview {
+      border-bottom: 0;
+    }
+    #overview .section-inner {
+      padding-bottom: 16px;
+    }
+    #findings .section-inner {
+      padding-top: 16px;
+    }
     .section-inner {
       max-width: 1180px;
       margin: 0 auto;
@@ -265,7 +277,7 @@
       font-weight: 750;
     }
     .performance-figure {
-      margin-bottom: 28px;
+      margin-bottom: 44px;
     }
 
     .figure-grid {
@@ -306,6 +318,14 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
+    .pipeline-method-figure .figure-media {
+      min-height: 260px;
+      aspect-ratio: 16 / 9;
+    }
+    .pipeline-method-figure .media-img {
+      object-fit: cover;
+      object-position: center;
+    }
     .figure-caption {
       padding: 14px 16px;
       border-top: 1px solid var(--soft-line);
@@ -320,6 +340,61 @@
       align-items: center;
       gap: 16px;
       margin: 24px 0 16px;
+    }
+    .leaderboard-panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(15, 107, 141, 0.07), rgba(179, 54, 54, 0.04) 55%, transparent),
+        #fff;
+      padding: 18px;
+      box-shadow: 0 14px 36px rgba(25, 45, 60, 0.08);
+    }
+    .leaderboard-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .summary-card {
+      border: 1px solid var(--soft-line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.82);
+      padding: 14px;
+    }
+    .summary-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .summary-value {
+      display: block;
+      margin-top: 7px;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1.05;
+      font-weight: 820;
+    }
+    .summary-meta {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .leaderboard-insight {
+      margin-top: 14px;
+      border: 1px solid rgba(15, 107, 141, 0.18);
+      border-left: 4px solid var(--accent);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.7);
+      color: #40505b;
+      padding: 12px 14px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 15px;
+      font-style: italic;
+      line-height: 1.6;
     }
     .tabs {
       display: flex;
@@ -359,7 +434,7 @@
     }
     table {
       width: 100%;
-      min-width: 820px;
+      min-width: 1040px;
       border-collapse: collapse;
       font-size: 14px;
     }
@@ -369,7 +444,11 @@
       text-align: right;
       white-space: nowrap;
     }
-    th:first-child, td:first-child { text-align: left; }
+    th:first-child, td:first-child { text-align: center; }
+    th:nth-child(2), td:nth-child(2) {
+      text-align: left;
+      min-width: 150px;
+    }
     th {
       background: #f8fafb;
       color: #52606a;
@@ -381,6 +460,20 @@
     }
     tbody tr:hover { background: #f9fbfc; }
     tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.top-row {
+      background: rgba(15, 107, 141, 0.05);
+    }
+    .rank-badge {
+      display: inline-grid;
+      place-items: center;
+      min-width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--wash-2);
+      color: #31586a;
+      font-weight: 820;
+      font-size: 12px;
+    }
     .hw {
       display: inline-flex;
       align-items: center;
@@ -393,10 +486,27 @@
       border-radius: 999px;
       background: var(--accent);
     }
+    .hw-stack {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .hw-type {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .metric-value-cell {
+      font-weight: 720;
+    }
     .note {
       margin-top: 12px;
       color: var(--muted);
       font-size: 13px;
+    }
+    .leaderboard-tools .note {
+      margin: 0;
     }
     .hidden { display: none; }
 
@@ -444,8 +554,9 @@
 
     @media (max-width: 940px) {
       .hero-inner { grid-template-columns: 1fr; min-height: auto; }
+      .hero-copy { padding-left: 0; }
       .hero-visual { max-width: 640px; width: 100%; }
-      .metrics, .grid-3, .figure-grid, .asset-grid { grid-template-columns: 1fr; }
+      .metrics, .grid-3, .figure-grid, .asset-grid, .leaderboard-summary { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
     @media (max-width: 620px) {
@@ -477,7 +588,7 @@
 
   <header id="top" class="hero">
     <div class="hero-inner">
-      <div>
+      <div class="hero-copy">
         <span class="eyebrow"><span class="dot"></span> ICML Publication</span>
         <h1>Characterizing Vision-Language-Action Models across XPUs</h1>
         <p class="subtitle">Constraints and acceleration for low-cost, energy-aware, real-time on-robot deployment.</p>
@@ -526,7 +637,7 @@
         <div class="figure-media image">
           <img class="media-img" src="images/vla_performance.png" alt="VLA performance comparison across models and hardware platforms">
         </div>
-        <figcaption class="figure-caption">Performance comparison across VLA models and hardware platforms.</figcaption>
+        <figcaption class="figure-caption">End-to-end inference performance across VLA model families and hardware platforms. The figure highlights why model capability, parameter count, and hardware peak throughput do not directly translate into deployable control frequency.</figcaption>
       </figure>
       <div class="section-head">
         <h2>Key Findings</h2>
@@ -578,13 +689,13 @@
           <div class="figure-media image tall">
             <img class="media-img" src="images/cet.jpg" alt="Cost-Energy-Time analysis across VLA models and hardware platforms">
           </div>
-          <figcaption class="figure-caption">Cost-Energy-Time analysis reveals different hardware choices under deployment priorities.</figcaption>
+          <figcaption class="figure-caption">Cost-Energy-Time analysis compares feasible hardware choices under latency, cost, energy, CE, and CET priorities. It shows that the best deployment platform changes with both the VLA model and the optimization metric.</figcaption>
         </figure>
         <figure class="figure">
           <div class="figure-media image tall">
             <img class="media-img" src="images/SM.jpg" alt="Latency breakdown and SM utilization trend">
           </div>
-          <figcaption class="figure-caption">Latency breakdown and SM utilization across VLA phases.</figcaption>
+          <figcaption class="figure-caption">Profiling breakdown for VLA inference on NVIDIA platforms. The trace separates vision, VLM backbone, and Action Expert stages, exposing high VLM utilization but low Action Expert utilization and motivating phase-aware acceleration.</figcaption>
         </figure>
       </div>
     </div>
@@ -616,21 +727,21 @@
       <div class="asset-grid" style="margin-top: 18px;">
         <figure class="figure">
           <div class="figure-media image">
-            <img class="media-img" src="images/dp-cache.jpg" alt="DP-Cache stable diffusion segment and cache reuse diagram" loading="lazy">
+            <img class="media-img" src="images/roofline.jpg" alt="Roofline analysis for VLM backbone and Action Expert bottlenecks" loading="lazy">
           </div>
-          <figcaption class="figure-caption">DP-Cache exploits stable diffusion segments to reduce redundant Action Expert computation.</figcaption>
+          <figcaption class="figure-caption">Roofline analysis explains the different bottlenecks inside the VLA pipeline. The VLM backbone sits in a compute-bound region, while the Action Expert falls into a memory-bandwidth-bound regime across hardware platforms.</figcaption>
         </figure>
         <figure class="figure">
+          <div class="figure-media image">
+            <img class="media-img" src="images/dp-cache.jpg" alt="DP-Cache stable diffusion segment and cache reuse diagram" loading="lazy">
+          </div>
+          <figcaption class="figure-caption">DP-Cache targets repeated denoising in diffusion-based Action Experts. By identifying stable segments offline and reusing cached intermediate states online, it reduces redundant computation while preserving the action trajectory.</figcaption>
+        </figure>
+        <figure class="figure pipeline-method-figure">
           <div class="figure-media image">
             <img class="media-img" src="images/vaepipe.jpg" alt="V-AEFusion pipeline parallelism diagram" loading="lazy">
           </div>
-          <figcaption class="figure-caption">V-AEFusion overlaps stale and fresh visual features with diffusion steps.</figcaption>
-        </figure>
-        <figure class="figure">
-          <div class="figure-media image">
-            <img class="media-img" src="images/roofline.jpg" alt="Roofline analysis for VLM backbone and Action Expert bottlenecks" loading="lazy">
-          </div>
-          <figcaption class="figure-caption">Roofline analysis separates compute-bound VLM and memory-bound Action Expert phases.</figcaption>
+          <figcaption class="figure-caption">V-AEFusion pipelines the VLM backbone and Action Expert by exploiting temporal coherence between adjacent robot observations. Early denoising can proceed with stale visual features, while later steps refine the action with fresh VLM outputs.</figcaption>
         </figure>
       </div>
     </div>
@@ -647,7 +758,7 @@
           <div class="figure-media image tall">
             <img class="media-img" src="images/energy.jpg" alt="Robot execution stages with time and energy consumption" loading="lazy">
           </div>
-          <figcaption class="figure-caption">Execution-stage time and energy comparison across hardware platforms.</figcaption>
+          <figcaption class="figure-caption">On-robot execution trace showing stage-level latency and energy consumption across hardware platforms. The breakdown connects leaderboard metrics to real robot operation, including perception, inference, and physical action execution.</figcaption>
         </figure>
       </div>
       <div class="figure-grid" style="margin-top: 18px;">
@@ -655,13 +766,13 @@
           <div class="figure-media image tall">
             <img class="media-img" src="images/jaka.PNG" alt="JAKA dual-arm robot placement tasks" loading="lazy">
           </div>
-          <figcaption class="figure-caption">JAKA dual-arm real-world placement tasks.</figcaption>
+          <figcaption class="figure-caption">JAKA dual-arm deployment examples covering real-world placement and manipulation scenarios. These tasks demonstrate the leaderboard setting beyond offline profiling, where control frequency and hardware efficiency affect closed-loop behavior.</figcaption>
         </figure>
         <figure class="figure">
           <div class="figure-media image tall">
             <img class="media-img" src="images/franka.png" alt="Franka table-cleaning task initial and finish frames" loading="lazy">
           </div>
-          <figcaption class="figure-caption">Real-world Franka deployment for table-cleaning with initial and finish frames.</figcaption>
+          <figcaption class="figure-caption">Franka table-cleaning deployment with initial and final frames from main and side views. The scene validates the hardware-selection guideline on a physical robot, linking CET-style analysis to task completion in the real world.</figcaption>
         </figure>
       </div>
     </div>
@@ -670,39 +781,46 @@
   <section id="leaderboard">
     <div class="section-inner">
       <div class="section-head">
-        <h2>Interactive Leaderboard</h2>
-        <p class="lead">Select a model and rank feasible hardware by latency, cost, energy, or CET-style deployment metrics.</p>
+        <h2>Interactive VLA-XPU Leaderboard</h2>
+        <p class="lead">Use this table to compare VLA model-hardware pairs under deployment constraints. Select a model, filter hardware platforms, and rank feasible choices by latency, acquisition cost, energy, or combined Cost-Time and Cost-Energy-Time metrics.</p>
       </div>
-      <div class="leaderboard-tools">
-        <div class="tabs" id="modelTabs" aria-label="Model filters"></div>
-        <input class="search" id="searchInput" type="search" placeholder="Search hardware" oninput="renderTable()">
-      </div>
-      <div class="leaderboard-tools">
-        <div class="tabs" aria-label="Metric views">
-          <button class="tab active" id="view-latency" onclick="setView('latency')">Latency View</button>
-          <button class="tab" id="view-energy" onclick="setView('energy')">Energy View</button>
+      <div class="leaderboard-panel">
+        <div class="leaderboard-summary" id="leaderboardSummary" aria-live="polite"></div>
+        <div class="leaderboard-insight" id="leaderboardInsight"></div>
+        <div class="leaderboard-tools">
+          <div class="tabs" id="modelTabs" aria-label="Model filters"></div>
+          <input class="search" id="searchInput" type="search" placeholder="Search hardware" oninput="renderTable()">
         </div>
+        <div class="leaderboard-tools">
+          <div class="tabs" aria-label="Metric views">
+            <button class="tab active" id="view-latency" onclick="setView('latency')">Latency View</button>
+            <button class="tab" id="view-energy" onclick="setView('energy')">Energy View</button>
+          </div>
+          <p class="note">Click table headers to re-rank platforms under the selected deployment priority.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortBy('rank')">Rank</th>
+                <th onclick="sortBy('hardware')">Hardware</th>
+                <th onclick="sortBy('capability')">Capability</th>
+                <th onclick="sortBy('memory')">Memory GB</th>
+                <th onclick="sortBy('cost')">Cost USD</th>
+                <th onclick="sortBy('latency')">Latency ms</th>
+                <th class="energy-col" onclick="sortBy('energy')">Energy J</th>
+                <th class="latency-col" onclick="sortBy('ct')">Cost·Time</th>
+                <th class="energy-col" onclick="sortBy('ce')">CE</th>
+                <th class="energy-col" onclick="sortBy('cet')">Cost·Energy·Time</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <p class="note">CT = cost x time. CE = cost x latency. CET = cost x energy x time. Lower values indicate better deployment efficiency under the selected metric.</p>
+        <p class="note" id="ckptSource"></p>
+        <p class="note">Note: Different checkpoints within the same model family can change input/output sizes and therefore affect end-to-end latency. All latency numbers above are measured without enabling <code>torch.compile</code> by default.</p>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortBy('hardware')">Hardware</th>
-              <th onclick="sortBy('capability')">Capability</th>
-              <th onclick="sortBy('memory')">Memory GB</th>
-              <th onclick="sortBy('cost')">Cost USD</th>
-              <th onclick="sortBy('latency')">Latency ms</th>
-              <th class="energy-col" onclick="sortBy('energy')">Energy J</th>
-              <th class="latency-col" onclick="sortBy('ct')">CT</th>
-              <th class="energy-col" onclick="sortBy('ce')">CE</th>
-              <th class="energy-col" onclick="sortBy('cet')">CET</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-      <p class="note">CT = cost x time. CE = cost x latency. CET = cost x energy x time. Lower values indicate better deployment efficiency under the selected metric.</p>
-      <p class="note" id="ckptSource"></p>
     </div>
   </section>
 
@@ -812,6 +930,15 @@
       "CPU": "#68737d",
       "Ascend 310B": "#a25f18"
     };
+    const hardwareTypes = {
+      "RTX 4090": "Desktop GPU",
+      "Jetson Thor": "Edge GPU",
+      "AGX Orin": "Edge GPU",
+      "B60 Pro": "XPU",
+      "Ascend 310P": "NPU",
+      "CPU": "CPU baseline",
+      "Ascend 310B": "NPU"
+    };
     const allData = rawData.map((d) => {
       const seconds = d.latency / 1000;
       return {
@@ -873,15 +1000,78 @@
       return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
     }
 
+    function minBy(rows, key) {
+      return rows.reduce((best, row) => {
+        if (row[key] === null || row[key] === undefined) return best;
+        if (!best || row[key] < best[key]) return row;
+        return best;
+      }, null);
+    }
+
+    function metricCell(value, options = {}) {
+      const { prefix = "", suffix = "", digits = 2 } = options;
+      if (value === null || value === undefined) return "-";
+      return `<span class="metric-value-cell">${prefix}${fmt(value, digits)}${suffix}</span>`;
+    }
+
+    function renderSummary(rows, visibleCount) {
+      const bestLatency = minBy(rows, "latency");
+      const bestCost = minBy(rows, "cost");
+      const scoreKey = currentView === "energy" ? "cet" : "ct";
+      const bestScore = minBy(rows, scoreKey);
+      const bestEnergy = minBy(rows, "energy");
+      const scoreLabel = currentView === "energy" ? "Best CET" : "Best CT";
+      const scoreValue = bestScore ? `${bestScore.hardware} · ${fmt(bestScore[scoreKey])}` : "-";
+      const summary = [
+        {
+          label: "Current Model",
+          value: currentModel,
+          meta: `${visibleCount} visible platforms`
+        },
+        {
+          label: "Fastest Latency",
+          value: bestLatency ? bestLatency.hardware : "-",
+          meta: bestLatency ? `${fmt(bestLatency.latency)} ms` : "No data"
+        },
+        {
+          label: "Lowest Cost",
+          value: bestCost ? bestCost.hardware : "-",
+          meta: bestCost ? `$${bestCost.cost.toLocaleString()}` : "No data"
+        },
+        {
+          label: scoreLabel,
+          value: scoreValue,
+          meta: currentView === "energy" && bestEnergy ? `Lowest energy: ${bestEnergy.hardware} · ${bestEnergy.energy.toLocaleString()} J` : "Lower is better"
+        }
+      ];
+
+      document.getElementById("leaderboardSummary").innerHTML = summary.map((item) => `
+        <article class="summary-card">
+          <span class="summary-label">${item.label}</span>
+          <span class="summary-value">${item.value}</span>
+          <span class="summary-meta">${item.meta}</span>
+        </article>
+      `).join("");
+
+      const rankingText = currentView === "energy"
+        ? "Energy View filters to platforms with measured energy and ranks by CET by default, so battery-aware deployment choices are easier to compare."
+        : "Latency View keeps every profiled platform visible and ranks by CT by default, balancing inference time with hardware acquisition cost.";
+      document.getElementById("leaderboardInsight").textContent =
+        `${rankingText} Use the search box to isolate a hardware family, then click any metric header to inspect a different priority.`;
+    }
+
     function renderTable() {
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
-      let rows = allData.filter((row) => row.model === currentModel);
-      if (currentView === "energy") rows = rows.filter((row) => row.energy);
+      const modelRows = allData.filter((row) => row.model === currentModel);
+      const viewRows = currentView === "energy" ? modelRows.filter((row) => row.energy) : modelRows;
+      let rows = [...viewRows];
       if (query) rows = rows.filter((row) => row.hardware.toLowerCase().includes(query));
+      renderSummary(viewRows, rows.length);
 
+      const effectiveSortKey = sortKey === "rank" ? (currentView === "energy" ? "cet" : "ct") : sortKey;
       rows.sort((a, b) => {
-        const av = a[sortKey];
-        const bv = b[sortKey];
+        const av = a[effectiveSortKey];
+        const bv = b[effectiveSortKey];
         if (typeof av === "string") return sortDirection === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
         const safeA = av === null || av === undefined ? Number.POSITIVE_INFINITY : av;
         const safeB = bv === null || bv === undefined ? Number.POSITIVE_INFINITY : bv;
@@ -889,17 +1079,30 @@
       });
 
       const body = document.getElementById("tableBody");
-      body.innerHTML = rows.map((row) => `
-        <tr>
-          <td><span class="hw"><span class="hw-dot" style="background:${hardwareColors[row.hardware] || "#0f6b8d"}"></span>${row.hardware}</span></td>
-          <td>${fmt(row.capability, 1)}</td>
+      if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="10">No hardware matches the current filter.</td></tr>`;
+        document.getElementById("ckptSource").innerHTML = `CKPT source: <a href="${ckptSources[currentModel]}" target="_blank" rel="noopener">${ckptSources[currentModel]}</a>`;
+        setViewClassesOnly();
+        return;
+      }
+
+      body.innerHTML = rows.map((row, index) => `
+        <tr class="${index === 0 ? "top-row" : ""}">
+          <td><span class="rank-badge">${index + 1}</span></td>
+          <td>
+            <span class="hw-stack">
+              <span class="hw"><span class="hw-dot" style="background:${hardwareColors[row.hardware] || "#0f6b8d"}"></span>${row.hardware}</span>
+              <span class="hw-type">${hardwareTypes[row.hardware] || "Hardware"}</span>
+            </span>
+          </td>
+          <td>${metricCell(row.capability, { digits: 1 })}</td>
           <td>${row.memory}</td>
-          <td>$${row.cost.toLocaleString()}</td>
-          <td>${fmt(row.latency)}</td>
-          <td class="energy-col">${row.energy ? row.energy.toLocaleString() : "-"}</td>
-          <td class="latency-col">${fmt(row.ct)}</td>
-          <td class="energy-col">${fmt(row.ce)}</td>
-          <td class="energy-col">${fmt(row.cet)}</td>
+          <td>${metricCell(row.cost, { prefix: "$", digits: 0 })}</td>
+          <td>${metricCell(row.latency, { suffix: " ms" })}</td>
+          <td class="energy-col">${metricCell(row.energy, { suffix: " J", digits: 0 })}</td>
+          <td class="latency-col">${metricCell(row.ct)}</td>
+          <td class="energy-col">${metricCell(row.ce)}</td>
+          <td class="energy-col">${metricCell(row.cet)}</td>
         </tr>
       `).join("");
 
