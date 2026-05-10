@@ -434,7 +434,7 @@
     }
     table {
       width: 100%;
-      min-width: 1040px;
+      min-width: 1160px;
       border-collapse: collapse;
       font-size: 14px;
     }
@@ -500,6 +500,120 @@
     .metric-value-cell {
       font-weight: 720;
     }
+    .latency-button {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .latency-button:hover,
+    .latency-button.active {
+      border-color: rgba(15, 107, 141, 0.24);
+      background: rgba(15, 107, 141, 0.08);
+      color: #184f65;
+    }
+    .latency-button.has-accel::after {
+      content: " ↯";
+      color: var(--accent-2);
+      font-weight: 820;
+    }
+    .speedup-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      border-radius: 999px;
+      background: rgba(73, 107, 45, 0.11);
+      color: #35521f;
+      padding: 4px 8px;
+      font-weight: 820;
+    }
+    .accel-method-cell {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
+    .accel-method-cell strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+    .accel-method-cell span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .accel-detail {
+      margin-top: 16px;
+      border: 1px solid rgba(15, 107, 141, 0.22);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(15, 107, 141, 0.08), rgba(73, 107, 45, 0.05) 56%, transparent),
+        #fff;
+      box-shadow: 0 14px 34px rgba(25, 45, 60, 0.08);
+      overflow: hidden;
+    }
+    .accel-detail-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--soft-line);
+    }
+    .accel-detail h3 {
+      margin: 0 0 5px;
+      font-size: 18px;
+    }
+    .accel-detail p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .accel-close {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--muted);
+      padding: 6px 9px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 720;
+    }
+    .accel-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 18px 0;
+    }
+    .accel-summary-card {
+      border: 1px solid var(--soft-line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.78);
+      padding: 11px 12px;
+    }
+    .accel-table-wrap {
+      overflow-x: auto;
+      padding: 14px 18px 18px;
+    }
+    .accel-table {
+      min-width: 760px;
+      font-size: 13px;
+    }
+    .accel-table th,
+    .accel-table td {
+      padding: 10px 11px;
+    }
+    .accel-table th:first-child,
+    .accel-table td:first-child {
+      text-align: left;
+    }
+    .accel-table th:nth-child(2),
+    .accel-table td:nth-child(2) {
+      text-align: left;
+      min-width: 130px;
+    }
     .note {
       margin-top: 12px;
       color: var(--muted);
@@ -556,7 +670,7 @@
       .hero-inner { grid-template-columns: 1fr; min-height: auto; }
       .hero-copy { padding-left: 0; }
       .hero-visual { max-width: 640px; width: 100%; }
-      .metrics, .grid-3, .figure-grid, .asset-grid, .leaderboard-summary { grid-template-columns: 1fr; }
+      .metrics, .grid-3, .figure-grid, .asset-grid, .leaderboard-summary, .accel-summary { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
     @media (max-width: 620px) {
@@ -795,6 +909,7 @@
           <div class="tabs" aria-label="Metric views">
             <button class="tab active" id="view-latency" onclick="setView('latency')">Latency View</button>
             <button class="tab" id="view-energy" onclick="setView('energy')">Energy View</button>
+            <button class="tab" id="view-acceleration" onclick="setView('acceleration')">Acceleration View</button>
           </div>
           <p class="note">Click table headers to re-rank platforms under the selected deployment priority.</p>
         </div>
@@ -808,6 +923,7 @@
                 <th onclick="sortBy('memory')">Memory GB</th>
                 <th onclick="sortBy('cost')">Cost USD</th>
                 <th onclick="sortBy('latency')">Latency ms</th>
+                <th class="accel-col hidden" onclick="sortBy('bestAccelSpeedup')">Best Accel</th>
                 <th class="energy-col" onclick="sortBy('energy')">Energy J</th>
                 <th class="latency-col" onclick="sortBy('ct')">Cost·Time</th>
                 <th class="energy-col" onclick="sortBy('ce')">Cost·Energy</th>
@@ -817,6 +933,7 @@
             <tbody id="tableBody"></tbody>
           </table>
         </div>
+        <div class="accel-detail hidden" id="accelerationDetail" aria-live="polite"></div>
         <p class="note">CT = cost x time. CE = cost x energy. CET = cost x energy x time. Lower values indicate better deployment efficiency under the selected metric.</p>
         <p class="note" id="ckptSource"></p>
         <p class="note">Note: Different checkpoints within the same model family can change input/output sizes and therefore affect end-to-end latency. All latency numbers above are measured without enabling <code>torch.compile</code> by default.</p>
@@ -894,6 +1011,31 @@
       { model: "Diffusion Policy", hardware: "Ascend 310B", cost: 370, latency: 26611 }
     ];
 
+    const accelerationData = [
+      { model: "OpenVLA", hardware: "RTX 4090", method: "Quant. (4-bit)", category: "Quantization", stage: "End-to-end", speedup: 1.14, optimizedLatency: 162.07, parameter: "4-bit", evidence: "Freq. 6.17 Hz; Avg 67.7%" },
+      { model: "OpenVLA", hardware: "RTX 4090", method: "Cache", category: "Redundancy reduction", stage: "Decode", speedup: 1.16, optimizedLatency: 158.98, parameter: "-", evidence: "Freq. 6.29 Hz; Avg 74.7%" },
+      { model: "OpenVLA", hardware: "RTX 4090", method: "Spec.", category: "Speculative inference", stage: "Decode", speedup: 1.11, optimizedLatency: 166.11, parameter: "-", evidence: "Freq. 6.02 Hz; Avg 75.1%" },
+      { model: "OpenVLA", hardware: "RTX 4090", method: "Spec. + Cache", category: "Combined", stage: "Decode", speedup: 1.29, optimizedLatency: 143.06, parameter: "-", evidence: "Freq. 6.99 Hz; Avg 68.5%" },
+      { model: "OpenVLA", hardware: "RTX 4090", method: "Quant. + Cache", category: "Combined", stage: "Decode", speedup: 1.27, optimizedLatency: 146.20, parameter: "4-bit", evidence: "Freq. 6.84 Hz; Avg 65.1%" },
+
+      { model: "Diffusion Policy", hardware: "RTX 4090", method: "DP-Cache", category: "Redundancy reduction", stage: "Action Expert denoising", speedup: 1.89, optimizedLatency: 200, parameter: "S=4", evidence: "Freq. 5.0 Hz" },
+      { model: "Diffusion Policy", hardware: "RTX 4090", method: "DP-Cache", category: "Redundancy reduction", stage: "Action Expert denoising", speedup: 2.09, optimizedLatency: 181, parameter: "S=8", evidence: "Freq. 5.6 Hz" },
+      { model: "Diffusion Policy", hardware: "RTX 4090", method: "DP-Cache + Compile", category: "Combined", stage: "End-to-end", speedup: 2.90, optimizedLatency: 129, parameter: "-", evidence: "Freq. 7.7 Hz" },
+      { model: "Diffusion Policy", hardware: "Ascend 310P", method: "DP-Cache + Compile", category: "Combined", stage: "End-to-end", speedup: 6.00, optimizedLatency: 310, parameter: "-", evidence: "Freq. 3.2 Hz" },
+
+      { model: "Pi0.5", hardware: "RTX 4090", method: "DP-Cache", category: "Redundancy reduction", stage: "Action Expert denoising", speedup: 1.28, optimizedLatency: 74, parameter: "S=4", evidence: "SR 70%; source baseline 95 ms" },
+
+      { model: "Pi0", hardware: "RTX 4090", method: "V-AEFusion", category: "System-level pipelining", stage: "VLM + Action Expert", speedup: 1.32, optimizedLatency: 77, parameter: "-", evidence: "Avg 62.3%" },
+      { model: "Pi0", hardware: "AGX Orin", method: "V-AEFusion", category: "System-level pipelining", stage: "VLM + Action Expert", speedup: 1.14, optimizedLatency: 806, parameter: "-", evidence: "Cross-hardware table" },
+      { model: "Pi0", hardware: "Jetson Thor", method: "V-AEFusion", category: "System-level pipelining", stage: "VLM + Action Expert", speedup: 1.04, optimizedLatency: 236, parameter: "-", evidence: "Cross-hardware table" },
+      { model: "Pi0", hardware: "B60 Pro", method: "V-AEFusion", category: "System-level pipelining", stage: "VLM + Action Expert", speedup: 1.05, optimizedLatency: 292, parameter: "-", evidence: "Cross-hardware table" },
+      { model: "Pi0", hardware: "Ascend 310P", method: "V-AEFusion", category: "System-level pipelining", stage: "VLM + Action Expert", speedup: 1.00, optimizedLatency: 820, parameter: "-", evidence: "Cross-hardware table" },
+
+      { model: "Pi0", hardware: "RTX 4090", method: "Compile", category: "Compilation", stage: "End-to-end", speedup: 2.90, optimizedLatency: 35.20, parameter: "-", evidence: "Freq. 28.41 Hz" },
+      { model: "Pi0", hardware: "Jetson Thor", method: "Compile", category: "Compilation", stage: "End-to-end", speedup: 1.51, optimizedLatency: 163, parameter: "-", evidence: "Freq. 6.13 Hz" },
+      { model: "Pi0", hardware: "Ascend 310P", method: "Compile", category: "Compilation", stage: "End-to-end", speedup: 3.27, optimizedLatency: 250, parameter: "-", evidence: "Freq. 4.00 Hz" }
+    ];
+
     const memoryMap = {
       "RTX 4090": 24,
       "Jetson Thor": 128,
@@ -955,6 +1097,7 @@
     let currentView = "latency";
     let sortKey = "ct";
     let sortDirection = "asc";
+    let selectedAcceleration = null;
 
     function initTabs() {
       const models = [...new Set(allData.map((d) => d.model))];
@@ -966,22 +1109,35 @@
         button.textContent = model;
         button.onclick = () => {
           currentModel = model;
-          sortKey = currentView === "energy" ? "cet" : "ct";
+          selectedAcceleration = null;
+          sortKey = defaultSortKey(currentView);
+          sortDirection = defaultSortDirection(currentView);
           initTabs();
+          hideAccelerationDetails();
           renderTable();
         };
         container.appendChild(button);
       });
     }
 
+    function defaultSortKey(view) {
+      if (view === "energy") return "cet";
+      if (view === "acceleration") return "bestAccelSpeedup";
+      return "ct";
+    }
+
+    function defaultSortDirection(view) {
+      return view === "acceleration" ? "desc" : "asc";
+    }
+
     function setView(view) {
       currentView = view;
-      sortKey = view === "energy" ? "cet" : "ct";
-      sortDirection = "asc";
+      sortKey = defaultSortKey(view);
+      sortDirection = defaultSortDirection(view);
       document.getElementById("view-latency").classList.toggle("active", view === "latency");
       document.getElementById("view-energy").classList.toggle("active", view === "energy");
-      document.querySelectorAll(".energy-col").forEach((el) => el.classList.toggle("hidden", view !== "energy"));
-      document.querySelectorAll(".latency-col").forEach((el) => el.classList.toggle("hidden", view !== "latency"));
+      document.getElementById("view-acceleration").classList.toggle("active", view === "acceleration");
+      setViewClassesOnly();
       renderTable();
     }
 
@@ -990,7 +1146,7 @@
         sortDirection = sortDirection === "asc" ? "desc" : "asc";
       } else {
         sortKey = key;
-        sortDirection = "asc";
+        sortDirection = key === "bestAccelSpeedup" ? "desc" : "asc";
       }
       renderTable();
     }
@@ -998,6 +1154,21 @@
     function fmt(value, digits = 2) {
       if (value === null || value === undefined || Number.isNaN(value)) return "-";
       return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+    }
+
+    function fmtMultiplier(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) return "-";
+      return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 1 })}x`;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
     }
 
     function minBy(rows, key) {
@@ -1008,20 +1179,58 @@
       }, null);
     }
 
+    function accelerationMethodsFor(row) {
+      return accelerationData.filter((item) => item.model === row.model && item.hardware === row.hardware);
+    }
+
+    function bestAcceleration(row) {
+      return accelerationMethodsFor(row).sort((a, b) => {
+        if (b.speedup !== a.speedup) return b.speedup - a.speedup;
+        return a.optimizedLatency - b.optimizedLatency;
+      })[0] || null;
+    }
+
+    function accelerationValue(row, key) {
+      const best = bestAcceleration(row);
+      if (!best) return null;
+      if (key === "bestAccelSpeedup") return best.speedup;
+      if (key === "bestAccelLatency") return best.optimizedLatency;
+      return null;
+    }
+
     function metricCell(value, options = {}) {
       const { prefix = "", suffix = "", digits = 2 } = options;
       if (value === null || value === undefined) return "-";
       return `<span class="metric-value-cell">${prefix}${fmt(value, digits)}${suffix}</span>`;
     }
 
+    function accelerationCell(row) {
+      const best = bestAcceleration(row);
+      if (!best) return `<span class="summary-meta">No data</span>`;
+      return `
+        <span class="accel-method-cell">
+          <strong>${fmtMultiplier(best.speedup)} · ${fmt(best.optimizedLatency)} ms</strong>
+          <span>${escapeHtml(best.method)}</span>
+        </span>
+      `;
+    }
+
     function renderSummary(rows, visibleCount) {
       const bestLatency = minBy(rows, "latency");
       const bestCost = minBy(rows, "cost");
-      const scoreKey = currentView === "energy" ? "cet" : "ct";
+      const scoreKey = currentView === "energy" ? "cet" : currentView === "acceleration" ? "bestAccelSpeedup" : "ct";
       const bestScore = minBy(rows, scoreKey);
       const bestEnergy = minBy(rows, "energy");
-      const scoreLabel = currentView === "energy" ? "Best CET" : "Best CT";
-      const scoreValue = bestScore ? `${bestScore.hardware} · ${fmt(bestScore[scoreKey])}` : "-";
+      const bestAccelRow = rows.reduce((best, row) => {
+        const candidate = bestAcceleration(row);
+        if (!candidate) return best;
+        if (!best || candidate.speedup > best.method.speedup) return { row, method: candidate };
+        return best;
+      }, null);
+      const scoreLabel = currentView === "energy" ? "Best CET" : currentView === "acceleration" ? "Best Accel" : "Best CT";
+      const scoreValue = currentView === "acceleration"
+        ? (bestAccelRow ? `${bestAccelRow.row.hardware} · ${fmtMultiplier(bestAccelRow.method.speedup)}` : "-")
+        : (bestScore ? `${bestScore.hardware} · ${fmt(bestScore[scoreKey])}` : "-");
       const summary = [
         {
           label: "Current Model",
@@ -1041,7 +1250,11 @@
         {
           label: scoreLabel,
           value: scoreValue,
-          meta: currentView === "energy" && bestEnergy ? `Lowest energy: ${bestEnergy.hardware} · ${bestEnergy.energy.toLocaleString()} J` : "Lower is better"
+          meta: currentView === "acceleration" && bestAccelRow
+            ? `${bestAccelRow.method.method} -> ${fmt(bestAccelRow.method.optimizedLatency)} ms`
+            : currentView === "energy" && bestEnergy
+              ? `Lowest energy: ${bestEnergy.hardware} · ${bestEnergy.energy.toLocaleString()} J`
+              : "Lower is better"
         }
       ];
 
@@ -1055,9 +1268,11 @@
 
       const rankingText = currentView === "energy"
         ? "Energy View filters to platforms with measured energy and ranks by CET by default, so battery-aware deployment choices are easier to compare."
-        : "Latency View keeps every profiled platform visible and ranks by CT by default, balancing inference time with hardware acquisition cost.";
+        : currentView === "acceleration"
+          ? "Acceleration View ranks platforms by the best reported optimization speedup and exposes the optimized latency for quick comparison."
+          : "Latency View keeps every profiled platform visible and ranks by CT by default, balancing inference time with hardware acquisition cost.";
       document.getElementById("leaderboardInsight").textContent =
-        `${rankingText} Use the search box to isolate a hardware family, then click any metric header to inspect a different priority.`;
+        `${rankingText} Click any latency value to inspect applicable acceleration methods and source notes.`;
     }
 
     function renderTable() {
@@ -1068,25 +1283,32 @@
       if (query) rows = rows.filter((row) => row.hardware.toLowerCase().includes(query));
       renderSummary(viewRows, rows.length);
 
-      const effectiveSortKey = sortKey === "rank" ? (currentView === "energy" ? "cet" : "ct") : sortKey;
+      const effectiveSortKey = sortKey === "rank" ? defaultSortKey(currentView) : sortKey;
       rows.sort((a, b) => {
-        const av = a[effectiveSortKey];
-        const bv = b[effectiveSortKey];
+        const av = effectiveSortKey.startsWith("bestAccel") ? accelerationValue(a, effectiveSortKey) : a[effectiveSortKey];
+        const bv = effectiveSortKey.startsWith("bestAccel") ? accelerationValue(b, effectiveSortKey) : b[effectiveSortKey];
         if (typeof av === "string") return sortDirection === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
-        const safeA = av === null || av === undefined ? Number.POSITIVE_INFINITY : av;
-        const safeB = bv === null || bv === undefined ? Number.POSITIVE_INFINITY : bv;
-        return sortDirection === "asc" ? safeA - safeB : safeB - safeA;
+        const missingA = av === null || av === undefined;
+        const missingB = bv === null || bv === undefined;
+        if (missingA && missingB) return 0;
+        if (missingA) return 1;
+        if (missingB) return -1;
+        return sortDirection === "asc" ? av - bv : bv - av;
       });
 
       const body = document.getElementById("tableBody");
       if (!rows.length) {
-        body.innerHTML = `<tr><td colspan="10">No hardware matches the current filter.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="11">No hardware matches the current filter.</td></tr>`;
         document.getElementById("ckptSource").innerHTML = `CKPT source: <a href="${ckptSources[currentModel]}" target="_blank" rel="noopener">${ckptSources[currentModel]}</a>`;
+        hideAccelerationDetails();
         setViewClassesOnly();
         return;
       }
 
-      body.innerHTML = rows.map((row, index) => `
+      body.innerHTML = rows.map((row, index) => {
+        const methods = accelerationMethodsFor(row);
+        const isSelected = selectedAcceleration && selectedAcceleration.model === row.model && selectedAcceleration.hardware === row.hardware;
+        return `
         <tr class="${index === 0 ? "top-row" : ""}">
           <td><span class="rank-badge">${index + 1}</span></td>
           <td>
@@ -1098,21 +1320,133 @@
           <td>${metricCell(row.capability, { digits: 1 })}</td>
           <td>${row.memory}</td>
           <td>${metricCell(row.cost, { prefix: "$", digits: 0 })}</td>
-          <td>${metricCell(row.latency, { suffix: " ms" })}</td>
+          <td>
+            <button class="latency-button ${methods.length ? "has-accel" : ""} ${isSelected ? "active" : ""}" type="button" data-model="${escapeHtml(row.model)}" data-hardware="${escapeHtml(row.hardware)}" title="${methods.length ? `${methods.length} acceleration methods available` : "No acceleration data recorded yet"}">
+              ${metricCell(row.latency, { suffix: " ms" })}
+            </button>
+          </td>
+          <td class="accel-col hidden">${accelerationCell(row)}</td>
           <td class="energy-col">${metricCell(row.energy, { suffix: " J", digits: 0 })}</td>
           <td class="latency-col">${metricCell(row.ct)}</td>
           <td class="energy-col">${metricCell(row.ce)}</td>
           <td class="energy-col">${metricCell(row.cet)}</td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
+
+      body.querySelectorAll(".latency-button").forEach((button) => {
+        button.addEventListener("click", () => selectAcceleration(button.dataset.model, button.dataset.hardware));
+      });
 
       document.getElementById("ckptSource").innerHTML = `CKPT source: <a href="${ckptSources[currentModel]}" target="_blank" rel="noopener">${ckptSources[currentModel]}</a>`;
+      if (selectedAcceleration && selectedAcceleration.model === currentModel) {
+        renderAccelerationDetail(selectedAcceleration.model, selectedAcceleration.hardware);
+      }
       setViewClassesOnly();
+    }
+
+    function selectAcceleration(model, hardware) {
+      selectedAcceleration = { model, hardware };
+      document.querySelectorAll(".latency-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.model === model && button.dataset.hardware === hardware);
+      });
+      renderAccelerationDetail(model, hardware);
+    }
+
+    function renderAccelerationDetail(model, hardware) {
+      const row = allData.find((item) => item.model === model && item.hardware === hardware);
+      const methods = row ? accelerationMethodsFor(row) : [];
+      const panel = document.getElementById("accelerationDetail");
+      if (!row) {
+        hideAccelerationDetails();
+        return;
+      }
+
+      if (!methods.length) {
+        panel.innerHTML = `
+          <div class="accel-detail-head">
+            <div>
+              <h3>${escapeHtml(model)} on ${escapeHtml(hardware)}</h3>
+              <p>Baseline latency: ${fmt(row.latency)} ms. No acceleration method has been recorded for this model-hardware pair yet.</p>
+            </div>
+            <button class="accel-close" type="button" onclick="hideAccelerationDetails()">Close</button>
+          </div>
+        `;
+        panel.classList.remove("hidden");
+        return;
+      }
+
+      const best = bestAcceleration(row);
+      const methodRows = methods
+        .sort((a, b) => b.speedup - a.speedup)
+        .map((item) => `
+          <tr>
+            <td>${escapeHtml(item.method)}</td>
+            <td>${escapeHtml(item.category)}</td>
+            <td>${escapeHtml(item.stage)}</td>
+            <td>${escapeHtml(item.parameter || "-")}</td>
+            <td><span class="speedup-badge">${fmtMultiplier(item.speedup)}</span></td>
+            <td>${metricCell(item.optimizedLatency, { suffix: " ms" })}</td>
+            <td>${escapeHtml(item.evidence || "-")}</td>
+          </tr>
+        `).join("");
+
+      panel.innerHTML = `
+        <div class="accel-detail-head">
+          <div>
+            <h3>${escapeHtml(model)} on ${escapeHtml(hardware)}</h3>
+            <p>Clicking latency opens reported acceleration options for this exact model-hardware pair.</p>
+          </div>
+          <button class="accel-close" type="button" onclick="hideAccelerationDetails()">Close</button>
+        </div>
+        <div class="accel-summary">
+          <article class="accel-summary-card">
+            <span class="summary-label">Baseline Latency</span>
+            <span class="summary-value">${fmt(row.latency)} ms</span>
+            <span class="summary-meta">Leaderboard value</span>
+          </article>
+          <article class="accel-summary-card">
+            <span class="summary-label">Best Optimized Latency</span>
+            <span class="summary-value">${fmt(best.optimizedLatency)} ms</span>
+            <span class="summary-meta">${escapeHtml(best.method)}</span>
+          </article>
+          <article class="accel-summary-card">
+            <span class="summary-label">Best Speedup</span>
+            <span class="summary-value">${fmtMultiplier(best.speedup)}</span>
+            <span class="summary-meta">${escapeHtml(best.category)}</span>
+          </article>
+        </div>
+        <div class="accel-table-wrap">
+          <table class="accel-table">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Category</th>
+                <th>Stage</th>
+                <th>Param</th>
+                <th>Speedup</th>
+                <th>Optimized Latency</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody>${methodRows}</tbody>
+          </table>
+        </div>
+      `;
+      panel.classList.remove("hidden");
+    }
+
+    function hideAccelerationDetails() {
+      selectedAcceleration = null;
+      const panel = document.getElementById("accelerationDetail");
+      if (panel) panel.classList.add("hidden");
+      document.querySelectorAll(".latency-button").forEach((button) => button.classList.remove("active"));
     }
 
     function setViewClassesOnly() {
       document.querySelectorAll(".energy-col").forEach((el) => el.classList.toggle("hidden", currentView !== "energy"));
       document.querySelectorAll(".latency-col").forEach((el) => el.classList.toggle("hidden", currentView !== "latency"));
+      document.querySelectorAll(".accel-col").forEach((el) => el.classList.toggle("hidden", currentView !== "acceleration"));
     }
 
     function copyBibtex() {
